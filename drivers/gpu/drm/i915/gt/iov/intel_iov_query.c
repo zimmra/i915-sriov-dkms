@@ -73,12 +73,6 @@ static int guc_action_match_version(struct intel_guc *guc, u32 *branch,
 	if (unlikely(ret < 0))
 		return ret;
 
-	guc_info(guc, "Response version: Branch %u, Major %u, Minor %u, Patch %u\n",
-			FIELD_GET(VF2GUC_MATCH_VERSION_RESPONSE_MSG_1_BRANCH, response[1]),
-			FIELD_GET(VF2GUC_MATCH_VERSION_RESPONSE_MSG_1_MAJOR, response[1]),
-			FIELD_GET(VF2GUC_MATCH_VERSION_RESPONSE_MSG_1_MINOR, response[1]),
-			FIELD_GET(VF2GUC_MATCH_VERSION_RESPONSE_MSG_1_PATCH, response[1]));
-
 	GEM_BUG_ON(ret != VF2GUC_MATCH_VERSION_RESPONSE_MSG_LEN);
 	if (unlikely(FIELD_GET(VF2GUC_MATCH_VERSION_RESPONSE_MSG_0_MBZ, response[0])))
 		return -EPROTO;
@@ -115,9 +109,6 @@ static int vf_handshake_with_guc(struct intel_iov *iov)
 	guc_info(iov_to_guc(iov), "interface version %u.%u.%u.%u\n",
 		 branch, major, minor, patch);
 
-	guc_info(guc, "Expected interface version: %u.%u\n",
-			GUC_VF_VERSION_LATEST_MAJOR, GUC_VF_VERSION_LATEST_MINOR);
-
 	iov->vf.config.guc_abi.branch = branch;
 	iov->vf.config.guc_abi.major = major;
 	iov->vf.config.guc_abi.minor = minor;
@@ -125,10 +116,8 @@ static int vf_handshake_with_guc(struct intel_iov *iov)
 	return 0;
 
 fail:
-	// IOV_PROBE_ERROR(iov, "Unable to confirm version %u.%u (%pe)\n",
-	// 		major, minor, ERR_PTR(err));
-    IOV_PROBE_ERROR(iov, "Unable to confirm version %u.%u, expected %u.%u (%pe)\n",
-                    major, minor, GUC_VF_VERSION_LATEST_MAJOR, GUC_VF_VERSION_LATEST_MINOR, ERR_PTR(err));
+	IOV_PROBE_ERROR(iov, "Unable to confirm version %u.%u (%pe)\n",
+			major, minor, ERR_PTR(err));
 
 	/* try again with *any* just to query which version is supported */
 	branch = GUC_VERSION_BRANCH_ANY;
